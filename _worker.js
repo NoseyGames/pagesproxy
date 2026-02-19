@@ -3,7 +3,7 @@ export default {
     const url = new URL(request.url);
 
     // 1. Handle Proxy Requests
-    if (url.pathname.startsWith("/proxy/")) {
+    if (url.pathname.startsWith("/classwork/")) {
       const encryptedUrl = url.pathname.replace("/proxy/", "");
       let targetUrl;
       
