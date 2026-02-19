@@ -2,19 +2,21 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // 1. Handle Proxy Requests
-    if (url.pathname.startsWith("/classwork/")) {
-      const encryptedUrl = url.pathname.replace("/classwork/", "");
+    // This handles the actual site loading under a "homework" path
+    if (url.pathname.startsWith("/assignments/")) {
+      const encryptedUrl = url.pathname.replace("/assignments/", "");
       let targetUrl;
       
       try {
-        targetUrl = atob(encryptedUrl); // Decrypt Base64
+        // Decodes the "stealth" URL
+        targetUrl = atob(encryptedUrl); 
       } catch (e) {
-        return new Response("Invalid URL", { status: 400 });
+        return new Response("Assignment Not Found", { status: 404 });
       }
 
       try {
         const response = await fetch(targetUrl, {
+          method: request.method,
           headers: {
             "User-Agent": request.headers.get("User-Agent"),
             "Accept": request.headers.get("Accept"),
@@ -22,10 +24,9 @@ export default {
           redirect: "follow"
         });
 
-        // Create a new response so we can modify headers
         const newHeaders = new Headers(response.headers);
         
-        // CRITICAL: Strip security headers so it works in an iframe
+        // Remove security headers so the site can display in your tab
         newHeaders.set("Access-Control-Allow-Origin", "*");
         newHeaders.delete("Content-Security-Policy");
         newHeaders.delete("X-Frame-Options");
@@ -33,15 +34,14 @@ export default {
 
         return new Response(response.body, {
           status: response.status,
-          statusText: response.statusText,
           headers: newHeaders
         });
       } catch (err) {
-        return new Response("Fetch Error: " + err.message, { status: 500 });
+        return new Response("Resource Error", { status: 500 });
       }
     }
 
-    // 2. Otherwise, serve your HTML file
+    // Serve your main HTML interface
     return env.ASSETS.fetch(request);
   }
 };
