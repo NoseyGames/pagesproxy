@@ -3,185 +3,259 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title id="tab-title">Algebra Quiz II</title>
-    <link id="tab-icon" rel="icon" type="image/x-icon" href="https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico">
+    <title id="page-title">Algebra Quiz II</title>
+    <link id="page-icon" rel="icon" type="image/x-icon" href="https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico">
     <style>
-        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;400;900&display=swap");
-        :root { 
-            --bg: #000; 
-            --text: #fff; 
-            --border: rgba(255,255,255,0.15); 
-            --glass: rgba(10,10,10,0.95); 
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap");
+
+        :root {
+            --bg: #050505;
+            --text: #ffffff;
+            --glass: rgba(20, 20, 20, 0.85);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #fff;
         }
+
         * { box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow: hidden; }
-        
-        /* Navigation & Tabs */
-        #nav-container { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--glass); backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); }
-        .nav-controls { height: 50px; display: flex; align-items: center; padding: 0 15px; gap: 10px; }
-        #nav-url { flex-grow: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; padding: 8px 15px; border-radius: 5px; outline: none; font-size: 0.8rem; }
-        
-        .tab-bar { height: 35px; display: flex; background: rgba(0,0,0,0.3); padding: 0 10px; gap: 5px; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); overflow-x: auto; }
-        .tab { padding: 4px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); font-size: 0.7rem; border-radius: 4px; cursor: pointer; color: #888; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-        .tab.active { background: rgba(255,255,255,0.15); color: #fff; border-color: #fff; }
-        .tab-close { opacity: 0.5; font-weight: bold; }
-        .tab-close:hover { color: #ff4d4d; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow: hidden; }
 
-        .nav-btn { background: transparent; border: none; color: white; cursor: pointer; padding: 5px; display: flex; align-items: center; }
-        .nav-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
-
-        /* Proxy Viewport */
-        .proxy-frame { position: fixed; top: 85px; left: 0; width: 100vw; height: calc(100vh - 85px); border: none; background: #000; display: none; z-index: 100; }
-        .proxy-frame.active { display: block !important; }
-
-        /* Main UI */
-        .centered-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; z-index: 10; padding: 20px; text-align: center; }
-        .logo-wrapper h1 { font-size: 4rem; font-weight: 900; letter-spacing: -2px; text-transform: uppercase; margin: 0; }
-        .logo-wrapper h1 span { font-weight: 100; color: #666; margin-left: 10px; letter-spacing: 5px; }
-        #sj-form { width: 100%; max-width: 500px; margin-top: 30px; }
-        #sj-address { width: 100%; height: 55px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: white; padding: 0 20px; text-align: center; outline: none; border-radius: 8px; font-size: 1rem; }
+        /* --- UI LAYER --- */
+        #nav-layer {
+            position: fixed; top: 0; left: 0; right: 0; height: 50px;
+            background: var(--glass); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; padding: 0 15px; gap: 10px; z-index: 1000;
+            transition: transform 0.3s ease;
+        }
         
-        #constellation-canvas { position: fixed; inset: 0; z-index: 1; opacity: 0.6; pointer-events: none; }
+        /* When user goes full stealth, we can hide the nav bar */
+        body.stealth #nav-layer { transform: translateY(-100%); }
+
+        .nav-btn {
+            background: transparent; border: none; color: #888; cursor: pointer;
+            padding: 8px; border-radius: 6px; transition: 0.2s;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .nav-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+        #url-bar {
+            flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+            color: #fff; padding: 0 15px; height: 32px; border-radius: 6px;
+            font-size: 13px; outline: none; transition: 0.2s;
+            font-family: monospace;
+        }
+        #url-bar:focus { border-color: #666; background: rgba(0,0,0,0.5); }
+
+        /* --- TABS --- */
+        #tab-layer {
+            position: fixed; top: 50px; left: 0; right: 0; height: 35px;
+            background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; padding: 0 10px; gap: 5px; z-index: 999;
+            overflow-x: auto;
+        }
+        body.stealth #tab-layer { display: none; }
+        
+        .tab {
+            padding: 5px 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            border-radius: 4px; font-size: 11px; cursor: pointer; user-select: none;
+            display: flex; align-items: center; gap: 8px; min-width: 100px;
+            transition: 0.2s; color: #888;
+        }
+        .tab:hover { background: rgba(255,255,255,0.08); }
+        .tab.active { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3); }
+        .tab-close { margin-left: auto; opacity: 0.5; font-size: 14px; }
+        .tab-close:hover { opacity: 1; color: #ff5555; }
+
+        /* --- CONTENT --- */
+        #viewport {
+            position: fixed; top: 85px; left: 0; width: 100vw; height: calc(100vh - 85px);
+            z-index: 1;
+        }
+        body.stealth #viewport { top: 0; height: 100vh; }
+
+        iframe { width: 100%; height: 100%; border: none; display: none; background: #fff; }
+        iframe.active { display: block; }
+
+        /* --- WELCOME SCREEN --- */
+        #welcome {
+            position: fixed; inset: 0; z-index: 500;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .title { font-size: 3rem; font-weight: 900; letter-spacing: -2px; margin-bottom: 20px; }
+        .title span { color: #444; font-weight: 300; }
+        
+        #main-input {
+            width: 100%; max-width: 450px; height: 50px;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+            border-radius: 8px; padding: 0 20px; color: #fff; font-size: 16px; outline: none;
+            text-align: center;
+        }
+        
+        #constellation { position: fixed; inset: 0; z-index: -1; opacity: 0.4; }
     </style>
 </head>
 <body>
-    <canvas id="constellation-canvas"></canvas>
+    <canvas id="constellation"></canvas>
 
-    <div id="nav-container">
-        <div class="nav-controls">
-            <button class="nav-btn" onclick="controlFrame('back')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-            <input type="text" id="nav-url" placeholder="Search or type URL..." autocomplete="off">
-            <button class="nav-btn" onclick="addTab()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-            <button class="nav-btn" onclick="location.reload()"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></button>
-        </div>
-        <div class="tab-bar" id="tab-bar"></div>
+    <div id="nav-layer">
+        <button class="nav-btn" onclick="back()"><svg><path d="M15 18l-6-6 6-6"/></svg></button>
+        <button class="nav-btn" onclick="forward()"><svg><path d="M9 18l6-6-6-6"/></svg></button>
+        <button class="nav-btn" onclick="reload()"><svg><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
+        <input type="text" id="url-bar" placeholder="Enter URL..." autocomplete="off">
+        <button class="nav-btn" onclick="addTab()"><svg><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="nav-btn" onclick="toggleStealth()"><svg><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/></svg></button>
     </div>
+    
+    <div id="tab-layer">
+        </div>
 
-    <main class="centered-wrapper" id="main-ui">
-        <div class="logo-wrapper"><h1>NikeNetwork<span>V2</span></h1></div>
-        <form id="sj-form">
-            <input id="sj-address" type="text" placeholder="Access learning modules..." autofocus autocomplete="off" />
+    <div id="viewport">
+        </div>
+
+    <div id="welcome">
+        <h1 class="title">NikeNetwork<span>V2</span></h1>
+        <form onsubmit="launch(event)">
+            <input type="text" id="main-input" placeholder="Search freely..." autofocus>
         </form>
-    </main>
+    </div>
 
     <script>
         let tabs = [];
-        let activeTabId = null;
+        let activeId = null;
+        let stealth = false;
 
-        const mainUI = document.getElementById("main-ui");
-        const navUrl = document.getElementById("nav-url");
-        const sjAddress = document.getElementById("sj-address");
+        const nav = document.getElementById('nav-layer');
+        const tabBar = document.getElementById('tab-layer');
+        const viewport = document.getElementById('viewport');
+        const welcome = document.getElementById('welcome');
+        const urlBar = document.getElementById('url-bar');
+        const mainInput = document.getElementById('main-input');
+        const pageTitle = document.getElementById('page-title');
+        const pageIcon = document.getElementById('page-icon');
 
-        document.getElementById("sj-form").onsubmit = (e) => {
+        function launch(e) {
             e.preventDefault();
-            launchProxy(sjAddress.value);
-        };
+            const val = mainInput.value.trim();
+            if(!val) return;
+            welcome.style.display = 'none';
+            createTab(val);
+        }
 
-        navUrl.onkeydown = (e) => {
-            if (e.key === "Enter") launchProxy(navUrl.value);
-        };
+        function createTab(url) {
+            // Basic URL fixing
+            if(!url.includes('.') && !url.includes('://')) url = 'https://duckduckgo.com/?q=' + encodeURIComponent(url);
+            else if(!url.startsWith('http')) url = 'https://' + url;
 
-        function launchProxy(input) {
-            if (!input) return;
-            let url = input.trim();
-            if (!url.includes('.') || url.includes(' ')) {
-                url = 'https://duckduckgo.com/?q=' + encodeURIComponent(url);
-            } else if (!url.startsWith('http')) {
-                url = 'https://' + url;
-            }
+            const id = 't-' + Date.now();
+            const tab = { id, url, title: 'Loading...' };
+            tabs.push(tab);
 
-            const id = 'task-' + Date.now();
-            const encryptedUrl = btoa(url);
-            
+            // Create Iframe
             const frame = document.createElement('iframe');
-            frame.id = 'frame-' + id;
-            frame.className = 'proxy-frame';
-            frame.src = window.location.origin + '/assignments/' + encryptedUrl;
+            frame.id = 'f-' + id;
             
-            document.body.appendChild(frame);
-            tabs.push({ id, url, frame });
+            // PROXY URL LOGIC: /assignments/<base64_origin>/<path>
+            const origin = new URL(url).origin;
+            const path = new URL(url).pathname + new URL(url).search;
+            frame.src = window.location.origin + '/assignments/' + btoa(origin) + path;
+            
+            viewport.appendChild(frame);
             switchTab(id);
-            mainUI.style.display = "none";
-            sjAddress.value = "";
         }
 
         function switchTab(id) {
-            activeTabId = id;
-            document.querySelectorAll('.proxy-frame').forEach(f => f.classList.remove('active'));
-            const activeTab = tabs.find(t => t.id === id);
-            if (activeTab) {
-                document.getElementById('frame-' + id).classList.add('active');
-                navUrl.value = activeTab.url;
-            }
+            activeId = id;
+            document.querySelectorAll('iframe').forEach(f => f.classList.remove('active'));
+            const frame = document.getElementById('f-' + id);
+            if(frame) frame.classList.add('active');
+            
+            const tab = tabs.find(t => t.id === id);
+            if(tab) urlBar.value = tab.url;
             renderTabs();
         }
 
         function renderTabs() {
-            const bar = document.getElementById("tab-bar");
-            bar.innerHTML = "";
+            tabBar.innerHTML = '';
             tabs.forEach(t => {
-                const div = document.createElement("div");
-                div.className = `tab ${t.id === activeTabId ? 'active' : ''}`;
-                div.innerHTML = `<span>Module ${t.id.split('-')[1].slice(-4)}</span> <span class="tab-close" onclick="closeTab(event, '${t.id}')">×</span>`;
-                div.onclick = () => switchTab(t.id);
-                bar.appendChild(div);
+                const el = document.createElement('div');
+                el.className = `tab ${t.id === activeId ? 'active' : ''}`;
+                el.innerHTML = `<span>Page ${t.id.slice(-4)}</span> <span class="tab-close" onclick="closeTab(event, '${t.id}')">×</span>`;
+                el.onclick = () => switchTab(t.id);
+                tabBar.appendChild(el);
             });
         }
 
         window.closeTab = (e, id) => {
             e.stopPropagation();
-            tabs = tabs.filter(t => t.id !== id);
-            const frame = document.getElementById('frame-' + id);
-            if (frame) frame.remove();
-            
-            if (tabs.length === 0) {
-                mainUI.style.display = "flex";
-                activeTabId = null;
-                navUrl.value = "";
-            } else if (activeTabId === id) {
-                switchTab(tabs[tabs.length - 1].id);
+            const idx = tabs.findIndex(t => t.id === id);
+            if(idx > -1) {
+                tabs.splice(idx, 1);
+                document.getElementById('f-' + id).remove();
+                if(tabs.length === 0) {
+                    welcome.style.display = 'flex';
+                    mainInput.value = '';
+                    mainInput.focus();
+                } else {
+                    switchTab(tabs[Math.max(0, idx - 1)].id);
+                }
             }
             renderTabs();
         };
 
-        window.controlFrame = (action) => {
-            const current = document.getElementById('frame-' + activeTabId);
-            if (current && action === 'back') current.contentWindow.history.back();
+        window.back = () => document.getElementById('f-' + activeId)?.contentWindow.history.back();
+        window.forward = () => document.getElementById('f-' + activeId)?.contentWindow.history.forward();
+        window.reload = () => document.getElementById('f-' + activeId)?.contentWindow.location.reload();
+        window.addTab = () => { welcome.style.display = 'flex'; mainInput.value = ''; mainInput.focus(); };
+        
+        window.toggleStealth = () => {
+            stealth = !stealth;
+            document.body.classList.toggle('stealth', stealth);
+            if(stealth) {
+                pageTitle.innerText = "Google Docs";
+                pageIcon.href = "https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico";
+            } else {
+                pageTitle.innerText = "Algebra Quiz II";
+                pageIcon.href = ""; // Reset or set back to original
+            }
         };
 
-        window.addTab = () => {
-            mainUI.style.display = "flex";
-            sjAddress.focus();
+        urlBar.onkeydown = (e) => {
+            if(e.key === 'Enter') {
+                const frame = document.getElementById('f-' + activeId);
+                const url = urlBar.value.startsWith('http') ? urlBar.value : 'https://' + urlBar.value;
+                const origin = new URL(url).origin;
+                const path = new URL(url).pathname + new URL(url).search;
+                frame.src = window.location.origin + '/assignments/' + btoa(origin) + path;
+            }
         };
 
-        // Constellation Animation
-        const canvas = document.getElementById('constellation-canvas');
+        // Panic Key
+        window.onkeydown = (e) => {
+            if(e.key === 'Escape') toggleStealth();
+        };
+
+        // Constellation
+        const canvas = document.getElementById('constellation');
         const ctx = canvas.getContext('2d');
         let points = [];
+        
         function init() {
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            points = Array.from({length: 60}, () => ({
+            points = Array.from({length: 50}, () => ({
                 x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-                vx: (Math.random() - 0.5) * 0.7, vy: (Math.random() - 0.5) * 0.7, radius: Math.random() * 1.5 + 0.5
+                vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5
             }));
         }
+        
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            points.forEach((p, i) => {
+            points.forEach(p => {
                 p.x += p.vx; p.y += p.vy;
-                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = "rgba(255, 255, 255, 0.8)"; ctx.fill();
-                for (let j = i + 1; j < points.length; j++) {
-                    const p2 = points[j];
-                    const dist = Math.sqrt((p.x - p2.x)**2 + (p.y - p2.y)**2);
-                    if (dist < 150) {
-                        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y);
-                        ctx.strokeStyle = `rgba(255, 255, 255, ${1 - dist / 150 - 0.2})`;
-                        ctx.lineWidth = 0.5; ctx.stroke();
-                    }
-                }
+                if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                
+                ctx.fillStyle = "rgba(255,255,255,0.5)";
+                ctx.beginPath(); ctx.arc(p.x, p.y, 1, 0, Math.PI*2); ctx.fill();
             });
             requestAnimationFrame(animate);
         }
