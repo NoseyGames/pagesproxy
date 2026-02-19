@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="tab-title">Algebra Quiz II</title>
+    <link id="tab-icon" rel="icon" type="image/x-icon" href="https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico">
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;400;900&display=swap");
+        :root { --bg: #000; --text: #fff; --border: rgba(255,255,255,0.15); --glass: rgba(10,10,10,0.95); }
+        
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow: hidden; }
+
+        /* Navigation Bar */
+        #nav-container { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--glass); backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); }
+        .nav-controls { height: 50px; display: flex; align-items: center; padding: 0 15px; gap: 10px; }
+        #nav-url { flex-grow: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; padding: 8px 15px; border-radius: 5px; outline: none; font-size: 0.8rem; }
+        .nav-btn { background: transparent; border: none; color: white; cursor: pointer; padding: 5px; display: flex; align-items: center; }
+        .nav-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+        /* Proxy Viewport */
+        .proxy-frame { position: fixed; top: 50px; left: 0; width: 100vw; height: calc(100vh - 50px); border: none; background: #fff; display: none; z-index: 100; }
+        .proxy-frame.active { display: block !important; }
+
+        /* Main UI */
+        .centered-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; z-index: 10; padding: 20px; text-align: center; }
+        .logo-wrapper h1 { font-size: 4rem; font-weight: 900; letter-spacing: -2px; text-transform: uppercase; margin: 0; }
+        .logo-wrapper h1 span { font-weight: 100; color: #666; margin-left: 10px; letter-spacing: 5px; }
+        #sj-form { width: 100%; max-width: 500px; margin-top: 30px; }
+        #sj-address { width: 100%; height: 55px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: white; padding: 0 20px; text-align: center; outline: none; border-radius: 8px; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+    <div id="nav-container">
+        <div class="nav-controls">
+            <button class="nav-btn" onclick="goHome()">
+                <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            </button>
+            <input type="text" id="nav-url" placeholder="Search or enter URL...">
+        </div>
+    </div>
+
+    <div class="centered-wrapper" id="home-view">
+        <div class="logo-wrapper">
+            <h1>Algebra<span>Quiz II</span></h1>
+        </div>
+        <div id="sj-form">
+            <input type="text" id="sj-address" placeholder="Where to?">
+        </div>
+    </div>
+
+    <iframe id="proxy-viewport" class="proxy-frame"></iframe>
+
+    <script>
+        const frame = document.getElementById('proxy-viewport');
+        const homeView = document.getElementById('home-view');
+        const navInput = document.getElementById('nav-url');
+        const mainInput = document.getElementById('sj-address');
+
+        function launch(url) {
+            if (!url) return;
+            if (!url.startsWith('http')) url = 'https://' + url;
+            
+            frame.src = `/proxy?url=${encodeURIComponent(url)}`;
+            frame.classList.add('active');
+            homeView.style.display = 'none';
+            navInput.value = url;
+        }
+
+        function goHome() {
+            frame.classList.remove('active');
+            frame.src = 'about:blank';
+            homeView.style.display = 'flex';
+            navInput.value = '';
+        }
+
+        [navInput, mainInput].forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') launch(input.value);
+            });
+        });
+    </script>
+</body>
+</html>
