@@ -7,58 +7,37 @@ export default {
       let targetUrl;
       
       try {
-        targetUrl = atob(encryptedUrl); 
+        // Use decodeURIComponent to handle special characters in the Base64 string
+        targetUrl = atob(decodeURIComponent(encryptedUrl)); 
       } catch (e) {
-        return new Response("Assignment Not Found", { status: 404 });
+        return new Response("Invalid Assignment Link", { status: 400 });
       }
 
       try {
+        // Request the site with a clean set of headers
         const response = await fetch(targetUrl, {
           method: request.method,
           headers: {
-            "User-Agent": request.headers.get("User-Agent"),
-            "Accept": request.headers.get("Accept"),
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           },
           redirect: "follow"
         });
 
-        const contentType = response.headers.get("content-type") || "";
         const newHeaders = new Headers(response.headers);
         newHeaders.set("Access-Control-Allow-Origin", "*");
+        
+        // Remove ALL headers that block iframes
         newHeaders.delete("Content-Security-Policy");
         newHeaders.delete("X-Frame-Options");
-
-        if (contentType.includes("text/html")) {
-          let html = await response.text();
-          
-          // Injected script to intercept clicks and keep them in the homework path
-          const scriptInject = `
-            <script>
-              document.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', e => {
-                  const href = link.getAttribute('href');
-                  if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
-                  e.preventDefault();
-                  const target = new URL(href, window.location.href).href;
-                  window.location.href = window.location.origin + '/assignments/' + btoa(target);
-                });
-              });
-            </script>
-          `;
-          html = html.replace('</body>', scriptInject + '</body>');
-
-          return new Response(html, {
-            status: response.status,
-            headers: newHeaders
-          });
-        }
+        newHeaders.delete("Frame-Options");
+        newHeaders.delete("X-Content-Type-Options");
 
         return new Response(response.body, {
           status: response.status,
           headers: newHeaders
         });
       } catch (err) {
-        return new Response("Resource Error", { status: 500 });
+        return new Response("Could not connect to resource.", { status: 500 });
       }
     }
 
